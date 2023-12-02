@@ -5,6 +5,34 @@ const print = console.log;
 const { io } = require("../server");
 let messages = "";
 
+const getSentiment = async (messages) => {
+  let sentiment = ["NEU", 0];
+
+  async function query(data) {
+    const response = await fetch(
+      "https://api-inference.huggingface.co/models/cardiffnlp/twitter-roberta-base-sentiment",
+      {
+        headers: {
+          Authorization: "Bearer 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",
+        },
+        method: "POST",
+        body: JSON.stringify(data),
+      }
+    );
+    const result = await response.json();
+    return result;
+  }
+
+  const response = await query({ inputs: messages });
+  if (response[0][0].label == "LABEL_2")
+    sentiment = ["POS", response[0][0].score];
+  else if (response[0][0].label == "LABEL_1") sentiment = ["NEU", 0];
+  else if (response[0][0].label == "LABEL_0")
+    sentiment = ["NEG", -1 * response[0][0].score];
+
+  return sentiment;
+};
+
 io.on("connect", (socket) => {
   console.log(`🔌 Client Connected: ${socket.id}`);
 
@@ -20,12 +48,10 @@ io.on("connect", (socket) => {
     print(messages);
 
     // axios ml server
-    const sentiment = await axios.post("http://127.0.0.1:5000/", {
-      messages: messages,
-    });
+    const sentiment = await getSentiment(messages);
 
-    console.log(sentiment.data.sentiment);
-    socket.to(room).emit("sentiment", sentiment.data.sentiment);
+    console.log(sentiment);
+    socket.to(room).emit("sentiment", sentiment[1]);
 
     socket.to(room).emit("message-received", message, socket.id);
   });
