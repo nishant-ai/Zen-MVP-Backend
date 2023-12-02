@@ -2,7 +2,7 @@ from flask import Flask, request
 
 # Predictor
 from utils import process_tweet, lookup
-from nltk.corpus import  twitter_samples
+from nltk.corpus import twitter_samples
 import numpy as np
 import nltk
 import ssl
@@ -14,8 +14,8 @@ except AttributeError:
 else:
     ssl._create_default_https_context = _create_unverified_https_context
 
-nltk.download('twitter_samples')
-nltk.download('stopwords')
+# nltk.download('twitter_samples')
+# nltk.download('stopwords')
 
 
 # get the sets of positive and negative tweets
